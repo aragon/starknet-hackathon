@@ -29,7 +29,7 @@ const config = {
       url: "http://localhost:5000",
     },
     testnet: {
-      url: "https://alpha4.starknet.io",
+      url: "https://hackathon-3.starknet.io",
     },
     ganache: {
       url: "http://0.0.0.0:8545",

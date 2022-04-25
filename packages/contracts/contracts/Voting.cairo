@@ -3,45 +3,60 @@
 %builtins pedersen range_check
 
 from starkware.cairo.common.math import assert_not_zero
+from starkware.cairo.common.cairo_builtins import HashBuiltin
+from starkware.starknet.common.syscalls import get_block_timestamp
 
 
 # Structure for storing poll information
 struct Poll:
-	member result : felt # Vote result: 1 = PASSED, -1 = FAILED, 0 - NOT DEFINED
-	member termination_time : felt # When the vote should be shut down
-    member eligible_voters : felt* # list of people who are allowed to vote
-end 
+    member result : felt  # Vote result: 1 = PASSED, -1 = FAILED, 0 - NOT DEFINED
+    member termination_time : felt  # When the vote should be shut down
+    member eligible_voters : felt*  # list of people who are allowed to vote
+end
 
 # Map between poll id and the data of the poll
+
 @storage_var
-func polls_result_storage(poll_id: felt) -> (result: felt):
+func polls_counter() -> (count : felt):
 end
 
 @storage_var
-func polls_termination_time_storage(poll_id: felt) -> (termination_time: felt):
+func polls_result_storage(poll_id : felt) -> (result : felt):
 end
 
 @storage_var
-func polls_eligible_voters_storage(poll_id: felt) -> (eligible_voters: felt):
+func polls_termination_time_storage(poll_id : felt) -> (termination_time : felt):
 end
 
+@storage_var
+func polls_eligible_voters_storage(poll_id : felt) -> (eligible_voters : felt):
+end
 
 # Create a poll with parameters
 @external
-func create_poll():
-	return ()
+func create_poll{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        duration : felt) -> (poll_id : felt):
+    alloc_locals
+    let (current_poll_count) = polls_counter.read()
+    local new_poll_count = current_poll_count + 1
+    polls_counter.write(new_poll_count)
+
+    let (block_timestamp) = get_block_timestamp()
+    polls_termination_time_storage.write(new_poll_count, block_timestamp + duration)
+
+    return (new_poll_count)
 end
 
 # Receive a vote and store it in memory
 @external
 func recieved_vote():
-	return ()
+    return ()
 end
 
 # Check that the duration of the vote has passed and calculate the result
 @external
-func finilise_votes():
-	return ()
+func finalize_votes():
+    return ()
 end
 
 # Retreive result of the vote 
@@ -57,6 +72,13 @@ func view_result{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 	return (result)
 end
 
+# Retreive the termination time
+@view
+func termination_time{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        poll_id : felt) -> (termination_timestamp : felt):
+    let (termination_timestamp) = polls_termination_time_storage.read(poll_id)
+    return (termination_timestamp)
+end
 
 # Check if poll with provided id exists
 func check_if_poll_exists{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(poll_id : felt):

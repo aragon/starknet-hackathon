@@ -13,11 +13,14 @@ describe("Voting", function () {
   });
 
   it("can create a poll", async () => {
-    let res = await contract.invoke("create_poll", { duration: 100 });
+    await contract.invoke("create_poll", { duration: 100 });
     
+    let res1 = await contract.call("termination_time", {poll_id: 1});
+    expect(res1["termination_timestamp"]).to.equal(100n);
 
-    const { value } = await contract.call("termination_time", {poll_id: 1});
-    expect(value).to.equal(15n);
+    await contract.invoke("create_poll", { duration: 5 });
+
+    let res2 = await contract.call("termination_time", {poll_id: 2});
+    expect(res2["termination_timestamp"]).to.equal(5n);
   });
-
 });

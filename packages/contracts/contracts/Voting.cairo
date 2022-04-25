@@ -6,8 +6,6 @@ from starkware.cairo.common.math import assert_not_zero
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_block_timestamp
 
-from starkware.cairo.common.cairo_builtins import HashBuiltin
-
 
 # Structure for storing poll information
 struct Poll:

@@ -1,6 +1,11 @@
 %lang starknet
 
+%builtins pedersen range_check
+
 from starkware.cairo.common.math import assert_not_zero
+
+from starkware.cairo.common.cairo_builtins import HashBuiltin
+
 
 # Structure for storing poll information
 struct Poll:
@@ -43,9 +48,28 @@ end
 
 # Retreive result of the vote 
 @view 
-func view_result{syscall_ptr : felt*
-}(vote_id : felt) -> (result : felt):
-	return (1)
+func view_result{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}(poll_id : felt) -> (result : felt):
+
+	# If poll does not exist, through an error 
+	check_if_poll_exists(poll_id)
+
+	let (result : felt) = polls_result_storage.read(poll_id)
+
+	return (result)
+end
+
+
+# Check if poll with provided id exists
+func check_if_poll_exists{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(poll_id : felt):
+
+	let (eligible_voters) = polls_eligible_voters_storage.read(poll_id)
+
+	with_attr error_message("The poll with id does not exist"):
+        assert_not_zero(eligible_voters)
+    end
+
+    return ()
 end
 
 
